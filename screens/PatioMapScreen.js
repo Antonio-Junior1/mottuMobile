@@ -7,6 +7,14 @@ import { useFocusEffect } from '@react-navigation/native';
 
 const MOTOS_STORAGE_KEY = '@motorcyclesList_v2';
 
+// Dados mockados para exibição inicial
+const MOCK_MOTORCYCLES = [
+  { id: 'mock1', brand: 'Honda', model: 'CG 160', year: '2023', branch: 'Filial Centro' },
+  { id: 'mock2', brand: 'Yamaha', model: 'Factor 150', year: '2023', branch: 'Filial Centro' },
+  { id: 'mock3', brand: 'Honda', model: 'Biz 125', year: '2022', branch: 'Filial Norte' },
+  { id: 'mock4', brand: 'Yamaha', model: 'Fazer 250', year: '2023', branch: 'Filial Sul' },
+  { id: 'mock5', brand: 'Honda', model: 'XRE 300', year: '2022', branch: 'Filial Leste' },
+];
 
 const patioDataForAllBranches = {
   mapImage: require('../assets/images/patios/mapa_patio_exemplo.png'),
@@ -17,18 +25,29 @@ const patioDataForAllBranches = {
 };
 
 export default function PatioMapScreen({ route, navigation }) {
-  const { branchId, branchName } = route.params;
+  const { branchId, branchName } = route.params || { branchId: '1', branchName: 'Filial Centro' }; // Valor padrão caso não receba parâmetros
   const [motorcycleCount, setMotorcycleCount] = useState(0);
 
   const fetchMotorcycleCount = async () => {
     try {
       const savedMotorcycles = await AsyncStorage.getItem(MOTOS_STORAGE_KEY);
-      const loadedMotorcycles = savedMotorcycles ? JSON.parse(savedMotorcycles) : [];
+      let loadedMotorcycles = savedMotorcycles ? JSON.parse(savedMotorcycles) : [];
+      
+     
+      if (loadedMotorcycles.length === 0) {
+        loadedMotorcycles = MOCK_MOTORCYCLES;
+        
+      }
+      
       const count = loadedMotorcycles.filter(m => m.branch === branchName).length;
       setMotorcycleCount(count);
     } catch (error) {
       console.error('Erro ao carregar contagem de motos:', error);
       Alert.alert('Erro', 'Não foi possível carregar o número de motos no pátio.');
+      
+     
+      const count = MOCK_MOTORCYCLES.filter(m => m.branch === branchName).length;
+      setMotorcycleCount(count);
     }
   };
 
@@ -120,4 +139,3 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary[600], 
   },
 });
-
