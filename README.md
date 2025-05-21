@@ -141,7 +141,7 @@ Siga os passos abaixo para configurar e rodar o projeto em seu ambiente de desen
 1.  **Inicie o servidor de desenvolvimento Expo:**
     Ainda no diretório raiz do projeto, execute:
     ```bash
-    npx expo start
+    npx expo start ou npm start
     ```
     Este comando iniciará o Metro Bundler e exibirá um QR Code no terminal, além de abrir uma página no navegador com opções para rodar o aplicativo.
 
