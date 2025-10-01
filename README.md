@@ -4,9 +4,9 @@ Link para api necessario para funcionamento: https://github.com/CarlosCampos84/C
 
 ## Integrantes
 
-*   RM - 555223 Carlos Eduardo 
-*   RM - 554518 Antônio Júnior 
-*   RM - 554600 Caio Henrique 
+*   RM - 555223 Carlos Eduardo https://github.com/CarlosCampos84
+*   RM - 554518 Antônio Júnior https://github.com/Antonio-Junior1
+*   RM - 554600 Caio Henrique https://github.com/caiohc28
 
 ## Visão Geral do Projeto
 
