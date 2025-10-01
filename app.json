@@ -5,8 +5,7 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icons8-automobilismo-50.png",
-    "userInterfaceStyle": "light",
-    "newArchEnabled": true,
+    "userInterfaceStyle": "automatic",
     "splash": {
       "image": "./assets/icons8-automobilismo-50.png",
       "resizeMode": "contain",
@@ -19,8 +18,7 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/icons8-automobilismo-50.png",
         "backgroundColor": "#ffffff"
-      },
-      "edgeToEdgeEnabled": true
+      }
     },
     "web": {
       "favicon": "./assets/icons8-automobilismo-50.png"
