@@ -1,43 +1,75 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, useColorScheme, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import colors from '../theme/colors';
+import { lightTheme, darkTheme } from '../theme';
+import { auth } from '../firebaseConfig'; // Importa a instância de autenticação do Firebase
+import { signOut } from 'firebase/auth';
+import ApiConfig from '../components/ApiConfig';
+import Button from '../components/Button';
+
+import NetworkHelper from '../components/NetworkHelper';
 
 const HomeScreen = ({ navigation }) => {
+  const scheme = useColorScheme();
+  const theme = scheme === 'dark' ? darkTheme : lightTheme;
+  const [showApiConfig, setShowApiConfig] = useState(false);
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      Alert.alert('Sucesso', 'Logout realizado com sucesso!');
+      // A navegação será tratada automaticamente pelo listener em App.js
+    } catch (error) {
+      Alert.alert('Erro', 'Não foi possível fazer logout. Tente novamente.');
+      console.error('Erro de logout:', error);
+    }
+  };
+
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={[colors.primary[900], colors.primary[800]]}
+        colors={[theme.primary[900], theme.primary[800]]}
         style={styles.background}
       >
         <ScrollView contentContainerStyle={styles.content}>
-          <Text style={styles.title}>Mottu Manager</Text>
+          <Text style={styles.title(theme)}>Mottu Manager</Text>
           
-          <TouchableOpacity 
+          <Button 
+            title="Ver Filiais"
+            onPress={() => navigation.navigate("Filiais")}
             style={styles.button}
-            onPress={() => navigation.navigate('Filiais')}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.buttonText}>Ver Filiais</Text>
-          </TouchableOpacity>
+          />
           
-          <TouchableOpacity 
+          <Button 
+            title="Cadastrar Moto"
+            onPress={() => navigation.navigate("Cadastro")}
             style={styles.button}
-            onPress={() => navigation.navigate('Cadastro')}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.buttonText}>Cadastrar Moto</Text>
-          </TouchableOpacity>
+          />
           
-          <TouchableOpacity 
+          <Button 
+            title="Lista de Motos"
+            onPress={() => navigation.navigate("Motos")}
             style={styles.button}
-            onPress={() => navigation.navigate('Motos')}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.buttonText}>Lista de Motos</Text>
-          </TouchableOpacity>
+          />
+
+          <Button 
+            title="Configurar API"
+            onPress={() => setShowApiConfig(true)}
+            style={[styles.button, { backgroundColor: theme.primary[600] }]}
+          />
+
+          <Button 
+            title="Sair"
+            onPress={handleLogout}
+            style={[styles.button, { backgroundColor: theme.error[500] }]} // Botão de logout com cor diferente
+          />
         </ScrollView>
       </LinearGradient>
+
+      <ApiConfig 
+        visible={showApiConfig}
+        onClose={() => setShowApiConfig(false)}
+      />
     </View>
   );
 };
@@ -54,34 +86,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  title: {
+  title: (theme) => ({
     fontSize: 28,
     fontWeight: 'bold',
-    color: colors.secondary[500],
+    color: theme.secondary[500],
     marginVertical: 30,
-    textShadowColor: colors.secondary[500],
+    textShadowColor: theme.secondary[500],
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 10,
-  },
+  }),
   button: {
     width: '80%',
-    marginVertical: 15,
-    backgroundColor: colors.secondary[500],
-    borderRadius: 8,
-    padding: 15,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: colors.secondary[500],
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.8,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  buttonText: {
-    color: colors.primary[900],
-    fontWeight: 'bold',
-    fontSize: 16,
+    marginVertical: 10,
   },
 });
 
 export default HomeScreen;
+

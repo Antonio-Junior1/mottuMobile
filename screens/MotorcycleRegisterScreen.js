@@ -1,89 +1,113 @@
-import React, { useState, useRef } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  TextInput, 
+import React, { useState, useRef, useEffect } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TextInput,
   Alert,
   Platform,
   SafeAreaView,
   Keyboard,
-  TouchableOpacity
+  TouchableOpacity,
+  useColorScheme,
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  ScrollView
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Button from '../components/Button';
-import colors from '../theme/colors';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Picker } from '@react-native-picker/picker';
+import { lightTheme, darkTheme } from '../theme';
+import { motoService } from '../services/apiService';
+import { useApiState } from '../hooks/useApiState';
 
-const MOTOS_STORAGE_KEY = '@motorcyclesList_v2';
+const MotorcycleRegisterScreen = ({ navigation, route }) => {
+  const scheme = useColorScheme();
+  const theme = scheme === 'dark' ? darkTheme : lightTheme;
 
-const branchOptions = [
-  { label: 'Selecione uma filial...', value: '' },
-  { label: 'Matriz - Centro', value: 'Matriz - Centro' },
-  { label: 'Filial - Zona Norte', value: 'Filial - Zona Norte' },
-  { label: 'Filial - Zona Sul', value: 'Filial - Zona Sul' },
-];
+  const editingMoto = route.params?.moto; // Recebe a moto para edição, se houver
 
-const MotorcycleRegisterScreen = ({ navigation }) => {
   const [form, setForm] = useState({
     model: '',
-    brand: '',
-    year: '',
     plate: '',
-    branch: '', 
   });
   
+  const { loading, execute } = useApiState();
+  
   // Refs para os inputs
-  const brandInputRef = useRef(null);
-  const yearInputRef = useRef(null);
   const plateInputRef = useRef(null);
+
+  useEffect(() => {
+    if (editingMoto) {
+      setForm({
+        model: editingMoto.modelo || '',
+        plate: editingMoto.placa || '',
+      });
+    }
+  }, [editingMoto]);
 
   const handleChange = (name, value) => {
     setForm({ ...form, [name]: value });
   };
 
   const handleSubmit = async () => {
-    if (!form.model || !form.brand || !form.year || !form.plate || !form.branch) {
-      Alert.alert('Erro', 'Todos os campos são obrigatórios, incluindo a seleção da filial.');
+    if (!form.model || !form.plate) {
+      Alert.alert('Erro', 'Modelo e Placa são obrigatórios.');
       return;
     }
 
     try {
-      const currentMotorcycles = JSON.parse(await AsyncStorage.getItem(MOTOS_STORAGE_KEY)) || [];
-      const newMotorcycle = {
-        ...form,
-        id: Date.now().toString(), 
+      const motoData = {
+        placa: form.plate.toUpperCase(),
+        modelo: form.model,
       };
-      const updatedMotorcycles = [...currentMotorcycles, newMotorcycle];
-      await AsyncStorage.setItem(MOTOS_STORAGE_KEY, JSON.stringify(updatedMotorcycles));
-      
-      Alert.alert('Sucesso', 'Moto cadastrada!');
-      const registeredBranch = form.branch; 
-      setForm({ model: '', brand: '', year: '', plate: '', branch: '' }); 
-      navigation.navigate('Motos', { branchName: registeredBranch });
+
+      if (editingMoto) {
+        // Atualizar moto existente
+        await execute(
+          () => motoService.update(editingMoto.id, motoData),
+          {
+            successMessage: 'Moto atualizada com sucesso!',
+            onSuccess: () => {
+              setForm({ model: '', plate: '' });
+              navigation.goBack();
+            }
+          }
+        );
+      } else {
+        // Criar nova moto
+        await execute(
+          () => motoService.create(motoData),
+          {
+            successMessage: 'Moto cadastrada com sucesso!',
+            onSuccess: () => {
+              setForm({ model: '', plate: '' });
+              navigation.goBack();
+            }
+          }
+        );
+      }
     } catch (error) {
-      console.error('Erro ao salvar a moto:', error);
-      Alert.alert('Erro', 'Não foi possível cadastrar a moto.');
+      // O erro já é tratado pelo hook useApiState
+      console.error('Erro ao salvar moto:', error);
     }
   };
 
-  // Componente de input personalizado para garantir foco e teclado
-  const CustomInput = ({ label, value, onChangeText, placeholder, keyboardType, autoCapitalize, returnKeyType, onSubmitEditing, ref, blurOnSubmit }) => (
+  // Componente de input personalizado simples
+  const CustomInput = ({ label, value, onChangeText, placeholder, keyboardType, autoCapitalize, returnKeyType, onSubmitEditing, blurOnSubmit, inputRef }) => (
     <View style={styles.inputGroup}>
-      <Text style={styles.label}>{label}</Text>
+      <Text style={styles.label(theme)}>{label}</Text>
       <TouchableOpacity 
         activeOpacity={0.8} 
         style={styles.inputWrapper}
-        onPress={() => ref?.current?.focus()}
+        onPress={() => inputRef?.current?.focus()}
       >
         <TextInput
-          ref={ref}
-          style={styles.input}
+          ref={inputRef}
+          style={styles.input(theme)}
           value={value}
           onChangeText={onChangeText}
           placeholder={placeholder}
-          placeholderTextColor={colors.text.secondary}
+          placeholderTextColor={theme.text.secondary}
           keyboardType={keyboardType || 'default'}
           autoCapitalize={autoCapitalize || 'none'}
           returnKeyType={returnKeyType || 'next'}
@@ -98,81 +122,48 @@ const MotorcycleRegisterScreen = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.safeArea}>
       <LinearGradient
-        colors={[colors.primary[900], colors.primary[800]]}
+        colors={[theme.primary[900], theme.primary[800]]}
         style={styles.container}
       >
-        <View style={styles.content}>
-          <Text style={styles.title}>Cadastro de Moto</Text>
-          
-          <CustomInput
-            label="Modelo"
-            value={form.model}
-            onChangeText={(text) => handleChange('model', text)}
-            placeholder="Ex: CB 300"
-            returnKeyType="next"
-            onSubmitEditing={() => brandInputRef.current?.focus()}
-          />
-          
-          <CustomInput
-            label="Marca"
-            value={form.brand}
-            onChangeText={(text) => handleChange('brand', text)}
-            placeholder="Ex: Honda"
-            ref={brandInputRef}
-            returnKeyType="next"
-            onSubmitEditing={() => yearInputRef.current?.focus()}
-          />
-          
-          <CustomInput
-            label="Ano"
-            value={form.year}
-            onChangeText={(text) => handleChange('year', text)}
-            placeholder="Ex: 2023"
-            keyboardType="numeric"
-            ref={yearInputRef}
-            returnKeyType="next"
-            onSubmitEditing={() => plateInputRef.current?.focus()}
-          />
-          
-          <CustomInput
-            label="Placa"
-            value={form.plate}
-            onChangeText={(text) => handleChange('plate', text)}
-            placeholder="Ex: ABC1D23"
-            autoCapitalize="characters"
-            ref={plateInputRef}
-            returnKeyType="done"
-            onSubmitEditing={() => Keyboard.dismiss()}
-            blurOnSubmit={true}
-          />
-          
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Filial</Text>
-            <View style={styles.pickerContainer}>
-              <Picker
-                selectedValue={form.branch}
-                style={styles.picker}
-                onValueChange={(itemValue) => handleChange('branch', itemValue)}
-                dropdownIconColor={colors.text.primary}
-              >
-                {branchOptions.map((option) => (
-                  <Picker.Item 
-                    key={option.value} 
-                    label={option.label} 
-                    value={option.value}
-                    color={Platform.OS === 'android' ? colors.text.primary : undefined}
-                  />
-                ))}
-              </Picker>
+        <KeyboardAvoidingView 
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.keyboardAvoidingView}
+        >
+          <ScrollView contentContainerStyle={styles.scrollViewContent}>
+            <View style={styles.content}>
+              <Text style={styles.title(theme)}>{editingMoto ? 'Editar Moto' : 'Cadastro de Moto'}</Text>
+              
+              <CustomInput
+                label="Modelo"
+                value={form.model}
+                onChangeText={(text) => handleChange('model', text)}
+                placeholder="Ex: CB 600F Hornet"
+                autoCapitalize="words"
+                returnKeyType="next"
+                onSubmitEditing={() => plateInputRef.current?.focus()}
+              />
+              
+              <CustomInput
+                label="Placa"
+                value={form.plate}
+                onChangeText={(text) => handleChange('plate', text.toUpperCase())}
+                placeholder="Ex: ABC1D23"
+                autoCapitalize="characters"
+                inputRef={plateInputRef}
+                returnKeyType="done"
+                onSubmitEditing={() => Keyboard.dismiss()}
+                blurOnSubmit={true}
+              />
+              
+              <Button 
+                title={loading ? <ActivityIndicator color={theme.text.primary} /> : (editingMoto ? 'Atualizar Moto' : 'Cadastrar Moto')}
+                onPress={handleSubmit}
+                style={styles.submitButton}
+                disabled={loading}
+              />
             </View>
-          </View>
-          
-          <Button 
-            title="Cadastrar Moto"
-            onPress={handleSubmit}
-            style={styles.submitButton}
-          />
-        </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
       </LinearGradient>
     </SafeAreaView>
   );
@@ -185,49 +176,65 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  keyboardAvoidingView: {
+    flex: 1,
+  },
+  scrollViewContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
+  },
   content: {
     padding: 20,
     flex: 1,
   },
-  title: {
+  title: (theme) => ({
     fontSize: 24,
     fontWeight: 'bold',
-    color: colors.secondary[500],
+    color: theme.secondary[500],
     marginBottom: 30,
     textAlign: 'center',
-  },
+  }),
   inputGroup: {
     marginBottom: 20,
   },
-  label: {
-    color: colors.text.primary,
+  label: (theme) => ({
+    color: theme.text.primary,
     marginBottom: 8,
     fontSize: 16,
-  },
+  }),
   inputWrapper: {
     width: '100%',
   },
-  input: {
-    backgroundColor: colors.primary[700],
+  input: (theme) => ({
+    backgroundColor: theme.primary[700],
     borderRadius: 8,
     padding: 14,
-    color: colors.text.primary,
+    color: theme.text.primary,
     fontSize: 16,
     borderWidth: 1,
-    borderColor: colors.primary[600],
+    borderColor: theme.primary[600],
     height: 50,
-  },
-  pickerContainer: {
-    backgroundColor: colors.primary[700],
+  }),
+  pickerContainer: (theme) => ({
+    backgroundColor: theme.primary[700],
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: colors.primary[600],
+    borderColor: theme.primary[600],
     overflow: 'hidden', 
-  },
-  picker: {
-    height: 50, 
+  }),
+  picker: (theme) => ({
     width: '100%',
-    color: colors.text.primary,
+    color: theme.text.primary,
+  }),
+  loadingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 15,
+  },
+  loadingText: {
+    marginLeft: 10,
+    fontSize: 14,
   },
   submitButton: {
     marginTop: 20,
@@ -236,3 +243,4 @@ const styles = StyleSheet.create({
 });
 
 export default MotorcycleRegisterScreen;
+
