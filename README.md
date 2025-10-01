@@ -2,9 +2,9 @@
 
 ## Integrantes
 
-*   RM - 555223 Carlos Eduardo (GitHub: [carloseduardo](https://github.com/carloseduardo))
-*   RM - 554518 Antônio Júnior (GitHub: [antoniojunior](https://github.com/antoniojunior))
-*   RM - 554600 Caio Henrique (GitHub: [caiohenrique](https://github.com/caiohenrique))
+*   RM - 555223 Carlos Eduardo 
+*   RM - 554518 Antônio Júnior 
+*   RM - 554600 Caio Henrique 
 
 ## Visão Geral do Projeto
 
