@@ -1,6 +1,6 @@
 # MobileMottu - Gerenciador de Motos e Pátios com API REST + Firebase
 
-Link para api necessario para funcionamento: https://github.com/CarlosCampos84/CP4.MotoSecurityX.git
+Link para api necessario para funcionamento: https://github.com/CarlosCampos84/MotoSecurityX-Challenge
 
 ## Integrantes
 
