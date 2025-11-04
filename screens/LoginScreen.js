@@ -1,11 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { lightTheme, darkTheme } from '../theme';
 import { useColorScheme } from 'react-native';
-import { auth } from '../firebaseConfig'; // Importa a instância de autenticação do Firebase
+import { auth } from '../firebaseConfig';
 import { signInWithEmailAndPassword } from 'firebase/auth';
+import { registerForPushNotificationsAsync, sendLoginNotification } from '../services/notificationService';
+import i18n from '../i18n';
 
 const LoginScreen = () => {
   const [email, setEmail] = useState('');
@@ -15,31 +17,36 @@ const LoginScreen = () => {
   const scheme = useColorScheme();
   const theme = scheme === 'dark' ? darkTheme : lightTheme;
 
+  useEffect(() => {
+    registerForPushNotificationsAsync();
+  }, []);
+
   const handleLogin = async () => {
     if (!email || !password) {
-      Alert.alert('Erro', 'Por favor, preencha todos os campos.');
+      Alert.alert(i18n.t('error'), i18n.t('fillAllFields'));
       return;
     }
 
     setLoading(true);
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      Alert.alert('Sucesso', 'Login realizado com sucesso!');
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      await sendLoginNotification(userCredential.user.email);
+      Alert.alert(i18n.t('success'), i18n.t('loginSuccess'));
       // A navegação é automática através do onAuthStateChanged no App.js
     } catch (error) {
-      let errorMessage = 'Ocorreu um erro ao fazer login. Tente novamente.';
+      let errorMessage = i18n.t('loginError');
       if (error.code === 'auth/invalid-email') {
-        errorMessage = 'Email inválido.';
+        errorMessage = i18n.t('invalidEmail');
       } else if (error.code === 'auth/user-disabled') {
-        errorMessage = 'Usuário desativado.';
+        errorMessage = i18n.t('userDisabled');
       } else if (error.code === 'auth/user-not-found') {
-        errorMessage = 'Usuário não encontrado.';
+        errorMessage = i18n.t('userNotFound');
       } else if (error.code === 'auth/wrong-password') {
-        errorMessage = 'Senha incorreta.';
+        errorMessage = i18n.t('wrongPassword');
       } else if (error.code === 'auth/invalid-credential') {
-        errorMessage = 'Credenciais inválidas. Verifique seu email e senha.';
+        errorMessage = i18n.t('invalidCredentials');
       }
-      Alert.alert('Erro de Login', errorMessage);
+      Alert.alert(i18n.t('loginError_title'), errorMessage);
       console.error('Erro de login:', error);
     } finally {
       setLoading(false);
@@ -48,13 +55,13 @@ const LoginScreen = () => {
 
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
-      <Text style={[styles.title, { color: theme.text.primary }]}>Login</Text>
+      <Text style={[styles.title, { color: theme.text.primary }]}>{i18n.t('login')}</Text>
 
       <View style={styles.inputContainer}>
         <Ionicons name="mail-outline" size={24} color={theme.text.secondary} style={styles.icon} />
         <TextInput
           style={[styles.input, { color: theme.text.primary, borderBottomColor: theme.text.secondary }]}
-          placeholder="Email"
+          placeholder={i18n.t('email')}
           placeholderTextColor={theme.text.secondary}
           keyboardType="email-address"
           autoCapitalize="none"
@@ -67,7 +74,7 @@ const LoginScreen = () => {
         <Ionicons name="lock-closed-outline" size={24} color={theme.text.secondary} style={styles.icon} />
         <TextInput
           style={[styles.input, { color: theme.text.primary, borderBottomColor: theme.text.secondary }]}
-          placeholder="Senha"
+          placeholder={i18n.t('password')}
           placeholderTextColor={theme.text.secondary}
           secureTextEntry
           value={password}
@@ -83,12 +90,14 @@ const LoginScreen = () => {
         {loading ? (
           <ActivityIndicator color={theme.text.primary} />
         ) : (
-          <Text style={[styles.buttonText, { color: theme.text.primary }]}>Entrar</Text>
+          <Text style={[styles.buttonText, { color: theme.text.primary }]}>{i18n.t('loginButton')}</Text>
         )}
       </TouchableOpacity>
 
       <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-        <Text style={[styles.registerText, { color: theme.secondary[500] }]}>Não tem uma conta? Cadastre-se</Text>
+        <Text style={[styles.registerText, { color: theme.secondary[500] }]}>
+          {i18n.t('noAccount')} {i18n.t('registerHere')}
+        </Text>
       </TouchableOpacity>
     </View>
   );
@@ -142,4 +151,3 @@ const styles = StyleSheet.create({
 });
 
 export default LoginScreen;
-

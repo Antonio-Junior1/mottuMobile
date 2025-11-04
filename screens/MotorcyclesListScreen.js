@@ -6,10 +6,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { motoService } from '../services/apiService';
 import { useApiState } from '../hooks/useApiState';
+import i18n from '../i18n';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const MotorcyclesListScreen = ({ navigation, route }) => {
   const scheme = useColorScheme();
   const theme = scheme === 'dark' ? darkTheme : lightTheme;
+  const { currentLanguage } = useLanguage();
 
   const [allMotorcycles, setAllMotorcycles] = useState([]);
   const [displayedMotorcycles, setDisplayedMotorcycles] = useState([]);
@@ -46,29 +49,29 @@ const MotorcyclesListScreen = ({ navigation, route }) => {
   useEffect(() => {
     if (branchNameFromParams) {
       setDisplayedMotorcycles(allMotorcycles.filter(m => m.filial === branchNameFromParams));
-      navigation.setOptions({ title: `Motos em ${branchNameFromParams}` });
+      navigation.setOptions({ title: `${i18n.t('motorcyclesIn')} ${branchNameFromParams}` });
     } else {
       setDisplayedMotorcycles(allMotorcycles);
-      navigation.setOptions({ title: 'Todas as Motos Cadastradas' });
+      navigation.setOptions({ title: i18n.t('allMotorcycles') });
     }
-  }, [allMotorcycles, branchNameFromParams, navigation]);
+  }, [allMotorcycles, branchNameFromParams, navigation, currentLanguage]);
 
   const handleDelete = async (id) => {
     Alert.alert(
-      'Confirmar Exclusão',
-      'Tem certeza que deseja excluir esta moto?',
+      i18n.t('confirmDelete'),
+      i18n.t('confirmDeleteMotorcycle'),
       [
-        { text: 'Cancelar', style: 'cancel' },
+        { text: i18n.t('cancel'), style: 'cancel' },
         {
-          text: 'Excluir',
+          text: i18n.t('delete'),
           onPress: async () => {
             try {
               await deleteState.execute(
                 () => motoService.delete(id),
                 {
-                  successMessage: 'Moto excluída com sucesso!',
+                  successMessage: i18n.t('motorcycleDeleted'),
                   onSuccess: () => {
-                    fetchMotorcycles(); // Recarrega a lista após a exclusão
+                    fetchMotorcycles();
                   }
                 }
               );
@@ -95,10 +98,10 @@ const MotorcyclesListScreen = ({ navigation, route }) => {
       <View style={styles.motorcycleInfo}>
         <Text style={styles.motorcycleModel(theme)}>{item.marca} {item.modelo}</Text>
         <View style={styles.detailsRow}>
-          <Text style={styles.detailText(theme)}>Ano: {item.ano}</Text>
-          <Text style={styles.detailText(theme)}>Placa: {item.placa}</Text>
+          <Text style={styles.detailText(theme)}>{i18n.t('year')}: {item.ano}</Text>
+          <Text style={styles.detailText(theme)}>{i18n.t('plate')}: {item.placa}</Text>
         </View>
-        <Text style={styles.detailText(theme)}>Filial: {item.filial}</Text>
+        <Text style={styles.detailText(theme)}>{i18n.t('branch')}: {item.filial}</Text>
       </View>
       <TouchableOpacity 
         onPress={() => handleDelete(item.id)} 
@@ -122,7 +125,7 @@ const MotorcyclesListScreen = ({ navigation, route }) => {
       {loading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={theme.secondary[500]} />
-          <Text style={{ color: theme.text.primary, marginTop: 10 }}>Carregando motos...</Text>
+          <Text style={{ color: theme.text.primary, marginTop: 10 }}>{i18n.t('loadingMotorcycles')}</Text>
         </View>
       ) : (
         <FlatList
@@ -132,19 +135,20 @@ const MotorcyclesListScreen = ({ navigation, route }) => {
           contentContainerStyle={styles.listContent}
           ListHeaderComponent={
             <View style={styles.header}>
-              <Text style={styles.subtitle(theme)}>Total exibido: {displayedMotorcycles.length}</Text>
+              <Text style={styles.subtitle(theme)}>{i18n.t('totalDisplayed')}: {displayedMotorcycles.length}</Text>
             </View>
           }
           ListEmptyComponent={
             <View style={styles.emptyComponentContainer}>
               <Text style={styles.emptyComponentText(theme)}>
                 {branchNameFromParams
-                  ? `Nenhuma moto encontrada para a filial: ${branchNameFromParams}`
-                  : 'Nenhuma moto cadastrada ainda.'
+                  ? `${i18n.t('noMotorcyclesInBranch')} ${branchNameFromParams}`
+                  : i18n.t('noMotorcyclesYet')
                 }
               </Text>
             </View>
           }
+          extraData={currentLanguage}
         />
       )}
     </LinearGradient>
@@ -230,4 +234,3 @@ const styles = StyleSheet.create({
 });
 
 export default MotorcyclesListScreen;
-

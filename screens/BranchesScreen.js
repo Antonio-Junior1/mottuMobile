@@ -4,13 +4,16 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { lightTheme, darkTheme } from '../theme';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
-import { db } from '../firebaseConfig'; // Importa a instância do Firestore
+import { db } from '../firebaseConfig';
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore';
-import Patio from '../models/Patio'; // Importa o modelo Patio
+import Patio from '../models/Patio';
+import i18n from '../i18n';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const BranchesScreen = ({ navigation }) => {
   const scheme = useColorScheme();
   const theme = scheme === 'dark' ? darkTheme : lightTheme;
+  const { currentLanguage } = useLanguage();
 
   const [patios, setPatios] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -29,7 +32,7 @@ const BranchesScreen = ({ navigation }) => {
       setPatios(loadedPatios);
     } catch (error) {
       console.error('Erro ao carregar pátios do Firestore:', error);
-      Alert.alert('Erro', 'Não foi possível carregar os pátios.');
+      Alert.alert(i18n.t('error'), i18n.t('couldNotLoadBranches'));
       setPatios([]);
     } finally {
       setLoading(false);
@@ -44,20 +47,20 @@ const BranchesScreen = ({ navigation }) => {
 
   const handleAddPatio = async () => {
     if (!newPatioName.trim()) {
-      Alert.alert('Erro', 'O nome do pátio não pode ser vazio.');
+      Alert.alert(i18n.t('error'), i18n.t('emptyBranchName'));
       return;
     }
     setLoading(true);
     try {
       const newPatioData = new Patio(null, newPatioName.trim());
       await addDoc(collection(db, 'patios'), newPatioData.toFirestore());
-      Alert.alert('Sucesso', 'Pátio adicionado com sucesso!');
+      Alert.alert(i18n.t('success'), i18n.t('branchAdded'));
       setNewPatioName('');
       setModalVisible(false);
       fetchPatios();
     } catch (error) {
       console.error('Erro ao adicionar pátio:', error);
-      Alert.alert('Erro', 'Não foi possível adicionar o pátio.');
+      Alert.alert(i18n.t('error'), i18n.t('couldNotAddBranch'));
     } finally {
       setLoading(false);
     }
@@ -65,7 +68,7 @@ const BranchesScreen = ({ navigation }) => {
 
   const handleEditPatio = async () => {
     if (!newPatioName.trim()) {
-      Alert.alert('Erro', 'O nome do pátio não pode ser vazio.');
+      Alert.alert(i18n.t('error'), i18n.t('emptyBranchName'));
       return;
     }
     if (!editingPatio) return;
@@ -74,14 +77,14 @@ const BranchesScreen = ({ navigation }) => {
     try {
       const patioRef = doc(db, 'patios', editingPatio.id);
       await updateDoc(patioRef, { nome_local: newPatioName.trim() });
-      Alert.alert('Sucesso', 'Pátio atualizado com sucesso!');
+      Alert.alert(i18n.t('success'), i18n.t('branchUpdated'));
       setNewPatioName('');
       setEditingPatio(null);
       setModalVisible(false);
       fetchPatios();
     } catch (error) {
       console.error('Erro ao atualizar pátio:', error);
-      Alert.alert('Erro', 'Não foi possível atualizar o pátio.');
+      Alert.alert(i18n.t('error'), i18n.t('couldNotUpdateBranch'));
     } finally {
       setLoading(false);
     }
@@ -89,21 +92,21 @@ const BranchesScreen = ({ navigation }) => {
 
   const handleDeletePatio = async (id) => {
     Alert.alert(
-      'Confirmar Exclusão',
-      'Tem certeza que deseja excluir este pátio? Todas as motos associadas a ele podem ser afetadas.',
+      i18n.t('confirmDelete'),
+      i18n.t('confirmDeleteBranch'),
       [
-        { text: 'Cancelar', style: 'cancel' },
+        { text: i18n.t('cancel'), style: 'cancel' },
         {
-          text: 'Excluir',
+          text: i18n.t('delete'),
           onPress: async () => {
             setLoading(true);
             try {
               await deleteDoc(doc(db, 'patios', id));
-              Alert.alert('Sucesso', 'Pátio excluído com sucesso!');
+              Alert.alert(i18n.t('success'), i18n.t('branchDeleted'));
               fetchPatios();
             } catch (error) {
               console.error('Erro ao excluir pátio:', error);
-              Alert.alert('Erro', 'Não foi possível excluir o pátio.');
+              Alert.alert(i18n.t('error'), i18n.t('couldNotDeleteBranch'));
             } finally {
               setLoading(false);
             }
@@ -131,23 +134,23 @@ const BranchesScreen = ({ navigation }) => {
       style={styles.branchCard(theme)}
       onPress={() => Alert.alert(
         item.nome_local,
-        `O que você gostaria de fazer para o pátio ${item.nome_local}?`,
+        `${i18n.t('whatToDo')} ${item.nome_local}?`,
         [
           {
-            text: 'Ver Motos',
+            text: i18n.t('viewMotorcycles'),
             onPress: () => navigation.navigate('Motos', { branchName: item.nome_local }),
           },
           {
-            text: 'Editar',
+            text: i18n.t('edit'),
             onPress: () => openEditModal(item),
           },
           {
-            text: 'Excluir',
+            text: i18n.t('delete'),
             onPress: () => handleDeletePatio(item.id),
             style: 'destructive',
           },
           {
-            text: 'Cancelar',
+            text: i18n.t('cancel'),
             style: 'cancel',
           },
         ],
@@ -170,7 +173,7 @@ const BranchesScreen = ({ navigation }) => {
       {loading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={theme.secondary[500]} />
-          <Text style={{ color: theme.text.primary, marginTop: 10 }}>Carregando pátios...</Text>
+          <Text style={{ color: theme.text.primary, marginTop: 10 }}>{i18n.t('loadingBranches')}</Text>
         </View>
       ) : (
         <FlatList
@@ -180,20 +183,21 @@ const BranchesScreen = ({ navigation }) => {
           contentContainerStyle={styles.listContent}
           ListHeaderComponent={
             <View style={styles.headerContainer}>
-              <Text style={styles.title(theme)}>Nossos Pátios</Text>
+              <Text style={styles.title(theme)}>{i18n.t('branchesTitle')}</Text>
               <TouchableOpacity onPress={openAddModal} style={styles.addButton(theme)}>
                 <Ionicons name="add-circle-outline" size={24} color={theme.text.primary} />
-                <Text style={styles.addButtonText(theme)}>Adicionar Pátio</Text>
+                <Text style={styles.addButtonText(theme)}>{i18n.t('addBranch')}</Text>
               </TouchableOpacity>
             </View>
           }
           ListEmptyComponent={
             <View style={styles.emptyComponentContainer}>
               <Text style={styles.emptyComponentText(theme)}>
-                Nenhum pátio cadastrado ainda.
+                {i18n.t('noBranchesYet')}
               </Text>
             </View>
           }
+          extraData={currentLanguage}
         />
       )}
 
@@ -205,10 +209,12 @@ const BranchesScreen = ({ navigation }) => {
       >
         <View style={styles.centeredView}>
           <View style={[styles.modalView, { backgroundColor: theme.primary[800] }]}>
-            <Text style={[styles.modalTitle, { color: theme.text.primary }]}>{editingPatio ? 'Editar Pátio' : 'Adicionar Novo Pátio'}</Text>
+            <Text style={[styles.modalTitle, { color: theme.text.primary }]}>
+              {editingPatio ? i18n.t('editBranch') : i18n.t('addNewBranch')}
+            </Text>
             <TextInput
               style={[styles.modalInput, { backgroundColor: theme.primary[700], color: theme.text.primary, borderColor: theme.primary[600] }]}
-              placeholder={editingPatio ? 'Nome do Pátio' : 'Nome do novo pátio'}
+              placeholder={editingPatio ? i18n.t('branchName') : i18n.t('branchNamePlaceholder')}
               placeholderTextColor={theme.text.secondary}
               value={newPatioName}
               onChangeText={setNewPatioName}
@@ -218,7 +224,7 @@ const BranchesScreen = ({ navigation }) => {
                 style={[styles.modalButton, { backgroundColor: theme.error[500] }]}
                 onPress={() => setModalVisible(false)}
               >
-                <Text style={[styles.buttonText, { color: theme.text.primary }]}>Cancelar</Text>
+                <Text style={[styles.buttonText, { color: theme.text.primary }]}>{i18n.t('cancel')}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.modalButton, { backgroundColor: theme.secondary[500] }]}
@@ -228,7 +234,9 @@ const BranchesScreen = ({ navigation }) => {
                 {loading ? (
                   <ActivityIndicator color={theme.text.primary} />
                 ) : (
-                  <Text style={[styles.buttonText, { color: theme.text.primary }]}>{editingPatio ? 'Salvar Alterações' : 'Adicionar'}</Text>
+                  <Text style={[styles.buttonText, { color: theme.text.primary }]}>
+                    {editingPatio ? i18n.t('saveChanges') : i18n.t('add')}
+                  </Text>
                 )}
               </TouchableOpacity>
             </View>
@@ -361,4 +369,3 @@ const styles = StyleSheet.create({
 });
 
 export default BranchesScreen;
-

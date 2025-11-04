@@ -3,8 +3,10 @@ import { View, Text, StyleSheet, Image, ScrollView, Alert, useColorScheme, Activ
 import { LinearGradient } from 'expo-linear-gradient';
 import { lightTheme, darkTheme } from '../theme';
 import { useFocusEffect } from '@react-navigation/native';
-import { db } from '../firebaseConfig'; // Importa a instância do Firestore
+import { db } from '../firebaseConfig';
 import { collection, query, where, getDocs } from 'firebase/firestore';
+import i18n from '../i18n';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const patioDataForAllBranches = {
   mapImage: require('../assets/images/patios/mapa_patio_exemplo.png'),
@@ -15,11 +17,12 @@ const patioDataForAllBranches = {
 };
 
 export default function PatioMapScreen({ route, navigation }) {
-  const { branchId, branchName } = route.params || { branchId: '', branchName: 'Pátio Desconhecido' };
+  const { branchId, branchName } = route.params || { branchId: '', branchName: i18n.t('unknownPatio') };
   const [motorcycleCount, setMotorcycleCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const scheme = useColorScheme();
   const theme = scheme === 'dark' ? darkTheme : lightTheme;
+  const { currentLanguage } = useLanguage();
 
   const fetchMotorcycleCount = async () => {
     setLoading(true);
@@ -34,7 +37,7 @@ export default function PatioMapScreen({ route, navigation }) {
       setMotorcycleCount(querySnapshot.size);
     } catch (error) {
       console.error('Erro ao carregar contagem de motos do Firestore:', error);
-      Alert.alert('Erro', 'Não foi possível carregar o número de motos no pátio.');
+      Alert.alert(i18n.t('error'), i18n.t('couldNotLoadMotorcycleCount'));
       setMotorcycleCount(0);
     } finally {
       setLoading(false);
@@ -44,8 +47,8 @@ export default function PatioMapScreen({ route, navigation }) {
   useFocusEffect(
     React.useCallback(() => {
       fetchMotorcycleCount();
-      navigation.setOptions({ title: `Pátio: ${branchName}` });
-    }, [branchName, navigation])
+      navigation.setOptions({ title: `${i18n.t('patio')}: ${branchName}` });
+    }, [branchName, navigation, currentLanguage])
   );
 
   return (
@@ -56,21 +59,23 @@ export default function PatioMapScreen({ route, navigation }) {
       {loading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={theme.secondary[500]} />
-          <Text style={{ color: theme.text.primary, marginTop: 10 }}>Carregando dados do pátio...</Text>
+          <Text style={{ color: theme.text.primary, marginTop: 10 }}>{i18n.t('loadingPatioData')}</Text>
         </View>
       ) : (
         <ScrollView contentContainerStyle={styles.scrollContent}>
-          <Text style={styles.title(theme)}>Pátio da Filial: {branchName}</Text>
-          <Text style={styles.subtitle(theme)}>Visualização do layout e localização das motos.</Text>
+          <Text style={styles.title(theme)}>{i18n.t('patioOf')} {branchName}</Text>
+          <Text style={styles.subtitle(theme)}>{i18n.t('patioVisualization')}</Text>
           
           <View style={styles.sectionContainer(theme)}>
-            <Text style={styles.sectionTitle(theme)}>Mapa do Pátio</Text>
+            <Text style={styles.sectionTitle(theme)}>{i18n.t('patioMap')}</Text>
             <Image source={patioDataForAllBranches.mapImage} style={styles.mapImage(theme)} resizeMode="contain" />
-            <Text style={styles.motorcycleCountText(theme)}>Número de Motos na Filial: {motorcycleCount}</Text>
+            <Text style={styles.motorcycleCountText(theme)}>
+              {i18n.t('motorcycleCountInBranch')} {motorcycleCount}
+            </Text>
           </View>
 
           <View style={styles.sectionContainer(theme)}>
-            <Text style={styles.sectionTitle(theme)}>Imagens do Local</Text>
+            <Text style={styles.sectionTitle(theme)}>{i18n.t('locationImages')}</Text>
             {patioDataForAllBranches.locationImages.map((imgSrc, index) => (
               <Image key={index} source={imgSrc} style={styles.locationImage(theme)} resizeMode="cover" />
             ))}
@@ -141,4 +146,3 @@ const styles = StyleSheet.create({
     backgroundColor: theme.primary[600], 
   }),
 });
-

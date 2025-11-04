@@ -19,12 +19,15 @@ import Button from '../components/Button';
 import { lightTheme, darkTheme } from '../theme';
 import { motoService } from '../services/apiService';
 import { useApiState } from '../hooks/useApiState';
+import i18n from '../i18n';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const MotorcycleRegisterScreen = ({ navigation, route }) => {
   const scheme = useColorScheme();
   const theme = scheme === 'dark' ? darkTheme : lightTheme;
+  const { currentLanguage } = useLanguage();
 
-  const editingMoto = route.params?.moto; // Recebe a moto para edição, se houver
+  const editingMoto = route.params?.moto;
 
   const [form, setForm] = useState({
     model: '',
@@ -33,7 +36,6 @@ const MotorcycleRegisterScreen = ({ navigation, route }) => {
   
   const { loading, execute } = useApiState();
   
-  // Refs para os inputs
   const plateInputRef = useRef(null);
 
   useEffect(() => {
@@ -51,7 +53,7 @@ const MotorcycleRegisterScreen = ({ navigation, route }) => {
 
   const handleSubmit = async () => {
     if (!form.model || !form.plate) {
-      Alert.alert('Erro', 'Modelo e Placa são obrigatórios.');
+      Alert.alert(i18n.t('error'), i18n.t('modelAndPlateRequired'));
       return;
     }
 
@@ -62,11 +64,10 @@ const MotorcycleRegisterScreen = ({ navigation, route }) => {
       };
 
       if (editingMoto) {
-        // Atualizar moto existente
         await execute(
           () => motoService.update(editingMoto.id, motoData),
           {
-            successMessage: 'Moto atualizada com sucesso!',
+            successMessage: i18n.t('motorcycleUpdated'),
             onSuccess: () => {
               setForm({ model: '', plate: '' });
               navigation.goBack();
@@ -74,11 +75,10 @@ const MotorcycleRegisterScreen = ({ navigation, route }) => {
           }
         );
       } else {
-        // Criar nova moto
         await execute(
           () => motoService.create(motoData),
           {
-            successMessage: 'Moto cadastrada com sucesso!',
+            successMessage: i18n.t('motorcycleRegistered'),
             onSuccess: () => {
               setForm({ model: '', plate: '' });
               navigation.goBack();
@@ -87,12 +87,10 @@ const MotorcycleRegisterScreen = ({ navigation, route }) => {
         );
       }
     } catch (error) {
-      // O erro já é tratado pelo hook useApiState
       console.error('Erro ao salvar moto:', error);
     }
   };
 
-  // Componente de input personalizado simples
   const CustomInput = ({ label, value, onChangeText, placeholder, keyboardType, autoCapitalize, returnKeyType, onSubmitEditing, blurOnSubmit, inputRef }) => (
     <View style={styles.inputGroup}>
       <Text style={styles.label(theme)}>{label}</Text>
@@ -131,23 +129,25 @@ const MotorcycleRegisterScreen = ({ navigation, route }) => {
         >
           <ScrollView contentContainerStyle={styles.scrollViewContent}>
             <View style={styles.content}>
-              <Text style={styles.title(theme)}>{editingMoto ? 'Editar Moto' : 'Cadastro de Moto'}</Text>
+              <Text style={styles.title(theme)}>
+                {editingMoto ? i18n.t('editMotorcycle') : i18n.t('motorcycleRegister')}
+              </Text>
               
               <CustomInput
-                label="Modelo"
+                label={i18n.t('model')}
                 value={form.model}
                 onChangeText={(text) => handleChange('model', text)}
-                placeholder="Ex: CB 600F Hornet"
+                placeholder={i18n.t('modelPlaceholder')}
                 autoCapitalize="words"
                 returnKeyType="next"
                 onSubmitEditing={() => plateInputRef.current?.focus()}
               />
               
               <CustomInput
-                label="Placa"
+                label={i18n.t('plate')}
                 value={form.plate}
                 onChangeText={(text) => handleChange('plate', text.toUpperCase())}
-                placeholder="Ex: ABC1D23"
+                placeholder={i18n.t('platePlaceholder')}
                 autoCapitalize="characters"
                 inputRef={plateInputRef}
                 returnKeyType="done"
@@ -156,7 +156,7 @@ const MotorcycleRegisterScreen = ({ navigation, route }) => {
               />
               
               <Button 
-                title={loading ? <ActivityIndicator color={theme.text.primary} /> : (editingMoto ? 'Atualizar Moto' : 'Cadastrar Moto')}
+                title={loading ? <ActivityIndicator color={theme.text.primary} /> : (editingMoto ? i18n.t('updateMotorcycle') : i18n.t('registerMotorcycle'))}
                 onPress={handleSubmit}
                 style={styles.submitButton}
                 disabled={loading}
@@ -243,4 +243,3 @@ const styles = StyleSheet.create({
 });
 
 export default MotorcycleRegisterScreen;
-

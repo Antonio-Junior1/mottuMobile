@@ -14,6 +14,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { lightTheme, darkTheme } from '../theme';
 import { setApiBaseUrl } from '../services/apiService';
+import i18n from '../i18n';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const API_URL_KEY = '@api_base_url';
 const DEFAULT_API_URL = 'http://10.0.2.2:5102/api';
@@ -21,6 +23,7 @@ const DEFAULT_API_URL = 'http://10.0.2.2:5102/api';
 const ApiConfig = ({ visible, onClose }) => {
   const scheme = useColorScheme();
   const theme = scheme === 'dark' ? darkTheme : lightTheme;
+  const { currentLanguage } = useLanguage();
   
   const [apiUrl, setApiUrl] = useState(DEFAULT_API_URL);
   const [loading, setLoading] = useState(false);
@@ -43,7 +46,7 @@ const ApiConfig = ({ visible, onClose }) => {
 
   const saveApiUrl = async () => {
     if (!apiUrl.trim()) {
-      Alert.alert('Erro', 'URL da API não pode estar vazia');
+      Alert.alert(i18n.t('error'), i18n.t('apiUrlEmpty'));
       return;
     }
 
@@ -51,11 +54,11 @@ const ApiConfig = ({ visible, onClose }) => {
     try {
       await AsyncStorage.setItem(API_URL_KEY, apiUrl.trim());
       setApiBaseUrl(apiUrl.trim());
-      Alert.alert('Sucesso', 'URL da API salva com sucesso!');
+      Alert.alert(i18n.t('success'), i18n.t('apiUrlSaved'));
       onClose();
     } catch (error) {
       console.error('Erro ao salvar URL da API:', error);
-      Alert.alert('Erro', 'Não foi possível salvar a URL da API');
+      Alert.alert(i18n.t('error'), i18n.t('couldNotSaveApiUrl'));
     } finally {
       setLoading(false);
     }
@@ -78,14 +81,14 @@ const ApiConfig = ({ visible, onClose }) => {
             <Ionicons name="close" size={24} color={theme.text.primary} />
           </TouchableOpacity>
           <Text style={[styles.title, { color: theme.text.primary }]}>
-            Configuração da API
+            {i18n.t('apiConfiguration')}
           </Text>
           <View style={styles.placeholder} />
         </View>
 
         <View style={styles.content}>
           <Text style={[styles.label, { color: theme.text.primary }]}>
-            URL Base da API
+            {i18n.t('apiBaseUrl')}
           </Text>
           <TextInput
             style={[styles.input, { 
@@ -95,7 +98,7 @@ const ApiConfig = ({ visible, onClose }) => {
             }]}
             value={apiUrl}
             onChangeText={setApiUrl}
-            placeholder="https://sua-api.com/api"
+            placeholder={i18n.t('apiUrlPlaceholder')}
             placeholderTextColor={theme.text.secondary}
             autoCapitalize="none"
             autoCorrect={false}
@@ -108,7 +111,7 @@ const ApiConfig = ({ visible, onClose }) => {
             disabled={loading}
           >
             <Text style={[styles.buttonText, { color: theme.text.primary }]}>
-              {loading ? 'Salvando...' : 'Salvar Configuração'}
+              {loading ? i18n.t('saving') : i18n.t('saveConfiguration')}
             </Text>
           </TouchableOpacity>
 
@@ -120,16 +123,16 @@ const ApiConfig = ({ visible, onClose }) => {
             onPress={resetToDefault}
           >
             <Text style={[styles.buttonText, { color: theme.text.secondary }]}>
-              Restaurar Padrão
+              {i18n.t('restoreDefault')}
             </Text>
           </TouchableOpacity>
 
           <View style={styles.infoContainer}>
             <Text style={[styles.infoText, { color: theme.text.secondary }]}>
-              Configure a URL base da sua API REST. Esta configuração será salva localmente no dispositivo.
+              {i18n.t('apiConfigInfo')}
             </Text>
             <Text style={[styles.infoText, { color: theme.text.secondary, marginTop: 10 }]}>
-              URL atual: {apiUrl}
+              {i18n.t('currentUrl')} {apiUrl}
             </Text>
           </View>
         </View>

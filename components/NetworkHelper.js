@@ -12,10 +12,13 @@ import {
 import { lightTheme, darkTheme } from '../theme';
 import { setApiBaseUrl } from '../services/apiService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import i18n from '../i18n';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const NetworkHelper = () => {
   const scheme = useColorScheme();
   const theme = scheme === 'dark' ? darkTheme : lightTheme;
+  const { currentLanguage } = useLanguage();
   const [customIP, setCustomIP] = useState('');
   const [testing, setTesting] = useState(false);
 
@@ -48,19 +51,19 @@ const NetworkHelper = () => {
       if (works) {
         await AsyncStorage.setItem('@api_base_url', url);
         setApiBaseUrl(url);
-        Alert.alert('Sucesso!', `API encontrada em: ${url}`);
+        Alert.alert(i18n.t('success'), `${i18n.t('apiFoundAt')} ${url}`);
         setTesting(false);
         return;
       }
     }
     
-    Alert.alert('Erro', 'Nenhuma API encontrada. Tente configurar manualmente.');
+    Alert.alert(i18n.t('error'), i18n.t('noApiFound'));
     setTesting(false);
   };
 
   const testCustomIP = async () => {
     if (!customIP) {
-      Alert.alert('Erro', 'Digite um IP válido');
+      Alert.alert(i18n.t('error'), i18n.t('enterValidIp'));
       return;
     }
     
@@ -72,9 +75,9 @@ const NetworkHelper = () => {
     if (works) {
       await AsyncStorage.setItem('@api_base_url', url);
       setApiBaseUrl(url);
-      Alert.alert('Sucesso!', `API configurada: ${url}`);
+      Alert.alert(i18n.t('success'), `${i18n.t('apiConfigured')} ${url}`);
     } else {
-      Alert.alert('Erro', `Não foi possível conectar em: ${url}`);
+      Alert.alert(i18n.t('error'), `${i18n.t('couldNotConnect')} ${url}`);
     }
     
     setTesting(false);
@@ -83,7 +86,7 @@ const NetworkHelper = () => {
   return (
     <View style={styles.container}>
       <Text style={[styles.title, { color: theme.text.primary }]}>
-        🔧 Assistente de Rede
+        {i18n.t('networkAssistant')}
       </Text>
       
       <TouchableOpacity
@@ -95,14 +98,14 @@ const NetworkHelper = () => {
           <ActivityIndicator color={theme.text.primary} />
         ) : (
           <Text style={[styles.buttonText, { color: theme.text.primary }]}>
-            🔍 Auto-detectar API
+            {i18n.t('autoDetectApi')}
           </Text>
         )}
       </TouchableOpacity>
 
       <View style={styles.manualSection}>
         <Text style={[styles.label, { color: theme.text.secondary }]}>
-          Ou digite seu IP manualmente:
+          {i18n.t('orEnterIpManually')}
         </Text>
         <TextInput
           style={[styles.input, { 
@@ -110,7 +113,7 @@ const NetworkHelper = () => {
             borderColor: theme.primary[600],
             backgroundColor: theme.primary[700]
           }]}
-          placeholder="Ex: 192.168.1.100"
+          placeholder={i18n.t('ipPlaceholder')}
           placeholderTextColor={theme.text.secondary}
           value={customIP}
           onChangeText={setCustomIP}
@@ -122,19 +125,17 @@ const NetworkHelper = () => {
           disabled={testing || !customIP}
         >
           <Text style={[styles.buttonText, { color: theme.text.primary }]}>
-            ✅ Testar IP
+            {i18n.t('testIp')}
           </Text>
         </TouchableOpacity>
       </View>
 
       <View style={styles.helpSection}>
         <Text style={[styles.helpTitle, { color: theme.text.primary }]}>
-          💡 Como descobrir seu IP:
+          {i18n.t('howToFindIp')}
         </Text>
         <Text style={[styles.helpText, { color: theme.text.secondary }]}>
-          • Windows: cmd → ipconfig{'\n'}
-          • Mac/Linux: terminal → ifconfig{'\n'}
-          • Procure por "IPv4 Address"
+          {i18n.t('ipInstructions')}
         </Text>
       </View>
     </View>

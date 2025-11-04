@@ -6,6 +6,7 @@ import { lightTheme, darkTheme } from '../theme';
 import { useColorScheme } from 'react-native';
 import { auth } from '../firebaseConfig'; // Importa a instância de autenticação do Firebase
 import { createUserWithEmailAndPassword } from 'firebase/auth';
+import i18n from '../i18n';
 
 const RegisterScreen = () => {
   const [name, setName] = useState('');
@@ -19,29 +20,29 @@ const RegisterScreen = () => {
 
   const handleRegister = async () => {
     if (!name || !email || !password || !confirmPassword) {
-      Alert.alert('Erro', 'Por favor, preencha todos os campos.');
+      Alert.alert(i18n.t('error'), i18n.t('fillAllFields'));
       return;
     }
     if (password !== confirmPassword) {
-      Alert.alert('Erro', 'As senhas não coincidem.');
+      Alert.alert(i18n.t('error'), i18n.t('passwordsDontMatch'));
       return;
     }
 
     setLoading(true);
     try {
       await createUserWithEmailAndPassword(auth, email, password);
-      Alert.alert('Sucesso', 'Cadastro realizado com sucesso!');
+      Alert.alert(i18n.t('success'), i18n.t('registerSuccess'));
       navigation.navigate("Login"); // Redireciona para a tela de Login após o cadastro
     } catch (error) {
-      let errorMessage = 'Ocorreu um erro ao cadastrar. Tente novamente.';
+      let errorMessage = i18n.t('registerError');
       if (error.code === 'auth/email-already-in-use') {
-        errorMessage = 'Este email já está em uso.';
+        errorMessage = i18n.t('emailInUse');
       } else if (error.code === 'auth/invalid-email') {
-        errorMessage = 'Email inválido.';
+        errorMessage = i18n.t('invalidEmail');
       } else if (error.code === 'auth/weak-password') {
-        errorMessage = 'A senha deve ter pelo menos 6 caracteres.';
+        errorMessage = i18n.t('weakPassword');
       }
-      Alert.alert('Erro de Cadastro', errorMessage);
+      Alert.alert(i18n.t('registerError_title'), errorMessage);
       console.error('Erro de cadastro:', error);
     } finally {
       setLoading(false);
@@ -50,13 +51,13 @@ const RegisterScreen = () => {
 
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
-      <Text style={[styles.title, { color: theme.text.primary }]}>Cadastro</Text>
+      <Text style={[styles.title, { color: theme.text.primary }]}>{i18n.t('register')}</Text>
 
       <View style={styles.inputContainer}>
         <Ionicons name="person-outline" size={24} color={theme.text.secondary} style={styles.icon} />
         <TextInput
           style={[styles.input, { color: theme.text.primary, borderBottomColor: theme.text.secondary }]}
-          placeholder="Nome Completo"
+          placeholder={i18n.t('fullName')}
           placeholderTextColor={theme.text.secondary}
           autoCapitalize="words"
           value={name}
@@ -68,7 +69,7 @@ const RegisterScreen = () => {
         <Ionicons name="mail-outline" size={24} color={theme.text.secondary} style={styles.icon} />
         <TextInput
           style={[styles.input, { color: theme.text.primary, borderBottomColor: theme.text.secondary }]}
-          placeholder="Email"
+          placeholder={i18n.t('email')}
           placeholderTextColor={theme.text.secondary}
           keyboardType="email-address"
           autoCapitalize="none"
@@ -81,7 +82,7 @@ const RegisterScreen = () => {
         <Ionicons name="lock-closed-outline" size={24} color={theme.text.secondary} style={styles.icon} />
         <TextInput
           style={[styles.input, { color: theme.text.primary, borderBottomColor: theme.text.secondary }]}
-          placeholder="Senha"
+          placeholder={i18n.t('password')}
           placeholderTextColor={theme.text.secondary}
           secureTextEntry
           value={password}
@@ -93,7 +94,7 @@ const RegisterScreen = () => {
         <Ionicons name="lock-closed-outline" size={24} color={theme.text.secondary} style={styles.icon} />
         <TextInput
           style={[styles.input, { color: theme.text.primary, borderBottomColor: theme.text.secondary }]}
-          placeholder="Confirmar Senha"
+          placeholder={i18n.t('confirmPassword')}
           placeholderTextColor={theme.text.secondary}
           secureTextEntry
           value={confirmPassword}
@@ -109,12 +110,14 @@ const RegisterScreen = () => {
         {loading ? (
           <ActivityIndicator color={theme.text.primary} />
         ) : (
-          <Text style={[styles.buttonText, { color: theme.text.primary }]}>Cadastrar</Text>
+          <Text style={[styles.buttonText, { color: theme.text.primary }]}>{i18n.t('registerButton')}</Text>
         )}
       </TouchableOpacity>
 
       <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-        <Text style={[styles.registerText, { color: theme.secondary[500] }]}>Já tem uma conta? Faça login</Text>
+        <Text style={[styles.registerText, { color: theme.secondary[500] }]}>
+          {i18n.t('alreadyHaveAccount')} {i18n.t('loginHere')}
+        </Text>
       </TouchableOpacity>
     </View>
   );
@@ -168,4 +171,3 @@ const styles = StyleSheet.create({
 });
 
 export default RegisterScreen;
-

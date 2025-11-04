@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { Alert } from 'react-native';
+import i18n from '../i18n';
 
 /**
  * Hook personalizado para gerenciar estado de loading, erro e dados da API
@@ -25,7 +26,7 @@ export const useApiState = (initialData = null) => {
       setData(result);
       
       if (successMessage) {
-        Alert.alert('Sucesso', successMessage);
+        Alert.alert(i18n.t('success'), successMessage);
       }
       
       if (onSuccess) {
@@ -34,11 +35,11 @@ export const useApiState = (initialData = null) => {
       
       return result;
     } catch (err) {
-      const errorMessage = err.message || 'Erro inesperado';
+      const errorMessage = err.message || i18n.t('unexpectedError');
       setError(errorMessage);
       
       if (showErrorAlert) {
-        Alert.alert('Erro', errorMessage);
+        Alert.alert(i18n.t('error'), errorMessage);
       }
       
       if (onError) {

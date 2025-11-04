@@ -12,17 +12,100 @@ import PatioMapScreen from './screens/PatioMapScreen';
 import LoginScreen from './screens/LoginScreen';
 import RegisterScreen from './screens/RegisterScreen';
 import { lightTheme, darkTheme } from './theme';
-import { auth } from './firebaseConfig'; // Importa a instância de autenticação do Firebase
+import { auth } from './firebaseConfig';
 import { onAuthStateChanged } from 'firebase/auth';
+import i18n from './i18n';
+import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
 
 const Tab = createBottomTabNavigator();
 const AuthStack = createStackNavigator();
 
-export default function App() {
+function MainTabs({ currentTheme }) {
+  const { currentLanguage } = useLanguage();
+  
+  return (
+    <Tab.Navigator
+      key={currentLanguage}
+      screenOptions={({ route }) => ({
+        tabBarIcon: ({ focused, color, size }) => {
+          let iconName;
+          if (route.name === 'Home') {
+            iconName = focused ? 'home' : 'home-outline';
+          } else if (route.name === 'Filiais') {
+            iconName = focused ? 'business' : 'business-outline';
+          } else if (route.name === 'Pátio') {
+            iconName = focused ? 'map' : 'map-outline';
+          } else if (route.name === 'Cadastro') {
+            iconName = focused ? 'add-circle' : 'add-circle-outline';
+          } else if (route.name === 'Motos') {
+            iconName = focused ? 'bicycle' : 'bicycle-outline';
+          }
+          return <Ionicons name={iconName} size={size} color={color} />;
+        },
+        tabBarActiveTintColor: currentTheme.secondary[500],
+        tabBarInactiveTintColor: currentTheme.text.secondary,
+        tabBarStyle: {
+          backgroundColor: currentTheme.primary[900],
+          borderTopColor: currentTheme.primary[700],
+        },
+        headerStyle: {
+          backgroundColor: currentTheme.primary[900],
+        },
+        headerTitleStyle: {
+          color: currentTheme.text.primary,
+        },
+        headerTintColor: currentTheme.secondary[500],
+      })}
+    >
+      <Tab.Screen 
+        name="Home" 
+        component={HomeScreen} 
+        options={{ 
+          title: i18n.t('home'),
+          tabBarLabel: i18n.t('home')
+        }} 
+      />
+      <Tab.Screen 
+        name="Filiais" 
+        component={BranchesScreen}
+        options={{ 
+          title: i18n.t('branches'),
+          tabBarLabel: i18n.t('branches')
+        }}
+      />
+      <Tab.Screen 
+        name="Pátio" 
+        component={PatioMapScreen} 
+        options={{ 
+          title: i18n.t('patioMap'),
+          tabBarLabel: i18n.t('patio')
+        }} 
+      />
+      <Tab.Screen 
+        name="Cadastro" 
+        component={MotorcycleRegisterScreen}
+        options={{ 
+          title: i18n.t('register'),
+          tabBarLabel: i18n.t('register')
+        }}
+      />
+      <Tab.Screen 
+        name="Motos" 
+        component={MotorcyclesListScreen} 
+        options={{ 
+          title: i18n.t('registeredMotorcycles'),
+          tabBarLabel: i18n.t('motorcycles')
+        }} 
+      />
+    </Tab.Navigator>
+  );
+}
+
+function AppNavigator() {
   const scheme = useColorScheme();
   const [currentTheme, setCurrentTheme] = useState(scheme === 'dark' ? darkTheme : lightTheme);
-  const [user, setUser] = useState(null); // Estado para armazenar o usuário autenticado
-  const [initializing, setInitializing] = useState(true); // Estado para verificar se o Firebase está inicializando
+  const [user, setUser] = useState(null);
+  const [initializing, setInitializing] = useState(true);
 
   useEffect(() => {
     const subscription = Appearance.addChangeListener(({ colorScheme }) => {
@@ -31,17 +114,16 @@ export default function App() {
     return () => subscription.remove();
   }, []);
 
-  // Listener para o estado de autenticação do Firebase
   useEffect(() => {
     const subscriber = onAuthStateChanged(auth, (user) => {
       setUser(user);
       if (initializing) setInitializing(false);
     });
-    return subscriber; // Desinscreve-se do listener ao desmontar o componente
+    return subscriber;
   }, []);
 
   if (initializing) {
-    return null; // Ou um componente de carregamento
+    return null;
   }
 
   const navigationTheme = scheme === 'dark' ? DarkTheme : DefaultTheme;
@@ -53,49 +135,12 @@ export default function App() {
   return (
     <NavigationContainer theme={navigationTheme}>
       {user ? (
-        <Tab.Navigator
-          screenOptions={({ route }) => ({
-            tabBarIcon: ({ focused, color, size }) => {
-              let iconName;
-              if (route.name === 'Home') {
-                iconName = focused ? 'home' : 'home-outline';
-              } else if (route.name === 'Filiais') {
-                iconName = focused ? 'business' : 'business-outline';
-              } else if (route.name === 'Pátio') {
-                iconName = focused ? 'map' : 'map-outline';
-              } else if (route.name === 'Cadastro') {
-                iconName = focused ? 'add-circle' : 'add-circle-outline';
-              } else if (route.name === 'Motos') {
-                iconName = focused ? 'bicycle' : 'bicycle-outline';
-              }
-              return <Ionicons name={iconName} size={size} color={color} />;
-            },
-            tabBarActiveTintColor: currentTheme.secondary[500],
-            tabBarInactiveTintColor: currentTheme.text.secondary,
-            tabBarStyle: {
-              backgroundColor: currentTheme.primary[900],
-              borderTopColor: currentTheme.primary[700],
-            },
-            headerStyle: {
-              backgroundColor: currentTheme.primary[900],
-            },
-            headerTitleStyle: {
-              color: currentTheme.text.primary,
-            },
-            headerTintColor: currentTheme.secondary[500],
-          })}
-        >
-          <Tab.Screen name="Home" component={HomeScreen} options={{ title: 'Início' }} />
-          <Tab.Screen name="Filiais" component={BranchesScreen} />
-          <Tab.Screen name="Pátio" component={PatioMapScreen} options={{ title: 'Mapa do Pátio' }} />
-          <Tab.Screen name="Cadastro" component={MotorcycleRegisterScreen} />
-          <Tab.Screen name="Motos" component={MotorcyclesListScreen} options={{ title: 'Motos Cadastradas' }} />
-        </Tab.Navigator>
+        <MainTabs currentTheme={currentTheme} />
       ) : (
         <AuthStack.Navigator
           screenOptions={{
             headerShown: false,
-            contentStyle: { backgroundColor: currentTheme.background } // Garante que o fundo seja do tema
+            contentStyle: { backgroundColor: currentTheme.background }
           }}
         >
           <AuthStack.Screen name="Login" component={LoginScreen} />
@@ -106,3 +151,10 @@ export default function App() {
   );
 }
 
+export default function App() {
+  return (
+    <LanguageProvider>
+      <AppNavigator />
+    </LanguageProvider>
+  );
+}
