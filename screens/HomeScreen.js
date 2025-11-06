@@ -64,6 +64,12 @@ const HomeScreen = ({ navigation }) => {
           />
 
           <Button 
+            title={i18n.t('viewThingSpeak')}
+            onPress={() => navigation.navigate("ThingSpeak")}
+            style={[styles.button, { backgroundColor: theme.secondary[700] }]}
+          />
+
+          <Button 
             title={i18n.t('configureApi')}
             onPress={() => setShowApiConfig(true)}
             style={[styles.button, { backgroundColor: theme.primary[600] }]}

@@ -9,6 +9,7 @@ import BranchesScreen from './screens/BranchesScreen';
 import MotorcycleRegisterScreen from './screens/MotorcycleRegisterScreen';
 import MotorcyclesListScreen from './screens/MotorcyclesListScreen';
 import PatioMapScreen from './screens/PatioMapScreen';
+import ThingSpeakScreen from './screens/ThingSpeakScreen';
 import LoginScreen from './screens/LoginScreen';
 import RegisterScreen from './screens/RegisterScreen';
 import { lightTheme, darkTheme } from './theme';
@@ -39,6 +40,8 @@ function MainTabs({ currentTheme }) {
             iconName = focused ? 'add-circle' : 'add-circle-outline';
           } else if (route.name === 'Motos') {
             iconName = focused ? 'bicycle' : 'bicycle-outline';
+          } else if (route.name === 'ThingSpeak') {
+            iconName = focused ? 'cloud' : 'cloud-outline';
           }
           return <Ionicons name={iconName} size={size} color={color} />;
         },
@@ -95,6 +98,14 @@ function MainTabs({ currentTheme }) {
         options={{ 
           title: i18n.t('registeredMotorcycles'),
           tabBarLabel: i18n.t('motorcycles')
+        }} 
+      />
+      <Tab.Screen 
+        name="ThingSpeak" 
+        component={ThingSpeakScreen} 
+        options={{ 
+          title: i18n.t('thingSpeakMonitoring'),
+          tabBarLabel: 'ThingSpeak'
         }} 
       />
     </Tab.Navigator>

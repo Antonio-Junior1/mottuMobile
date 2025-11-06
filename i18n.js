@@ -74,6 +74,18 @@ const translations = {
     unknownPatio: 'Pátio Desconhecido',
     couldNotLoadMotorcycleCount: 'Não foi possível carregar o número de motos no pátio.',
     
+    // ThingSpeak
+    thingSpeakMonitoring: 'Monitoramento ThingSpeak',
+    viewThingSpeak: 'Ver ThingSpeak',
+    loadingThingSpeak: 'Carregando dados do ThingSpeak...',
+    thingSpeakError: 'Erro ao carregar dados do ThingSpeak',
+    channelId: 'ID do Canal',
+    latestData: 'Últimos Dados',
+    entry: 'Entrada',
+    noDataAvailable: 'Nenhum dado disponível',
+    refreshData: 'Atualizar Dados',
+    retry: 'Tentar Novamente',
+    
     // API Config
     apiConfiguration: 'Configuração da API',
     apiBaseUrl: 'URL Base da API',
@@ -228,6 +240,18 @@ const translations = {
     loadingPatioData: 'Cargando datos del patio...',
     unknownPatio: 'Patio Desconocido',
     couldNotLoadMotorcycleCount: 'No se pudo cargar el número de motos en el patio.',
+    
+    // ThingSpeak
+    thingSpeakMonitoring: 'Monitoreo ThingSpeak',
+    viewThingSpeak: 'Ver ThingSpeak',
+    loadingThingSpeak: 'Cargando datos de ThingSpeak...',
+    thingSpeakError: 'Error al cargar datos de ThingSpeak',
+    channelId: 'ID del Canal',
+    latestData: 'Últimos Datos',
+    entry: 'Entrada',
+    noDataAvailable: 'No hay datos disponibles',
+    refreshData: 'Actualizar Datos',
+    retry: 'Intentar Nuevamente',
     
     // API Config
     apiConfiguration: 'Configuración de la API',
